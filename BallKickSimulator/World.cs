@@ -139,7 +139,7 @@ namespace BallKickSimulator
             // Model sencenja na flat (konstantno)
             gl.ShadeModel(OpenGL.GL_FLAT);
             gl.Enable(OpenGL.GL_DEPTH_TEST);
-            //gl.Enable(OpenGL.GL_CULL_FACE);
+            gl.Enable(OpenGL.GL_CULL_FACE);
             //gl.FrontFace(OpenGL.GL_CW);
             m_scene.LoadScene();
             m_scene.Initialize();
@@ -217,6 +217,7 @@ namespace BallKickSimulator
             gl.Translate(-2300.0f, -300.0f, -4000.0f);
             gl.Rotate(0.0f, 90.0f, 0.0f);
 
+            gl.Disable(OpenGL.GL_CULL_FACE);
             Disk rightLoop = new Disk
             {
                 InnerRadius = 1300f,
@@ -243,6 +244,7 @@ namespace BallKickSimulator
             leftLoop.Render(gl, SharpGL.SceneGraph.Core.RenderMode.Render);
             gl.PopMatrix();
 
+            gl.Enable(OpenGL.GL_CULL_FACE);
         }
 
         private void DrawGrass(OpenGL gl)
