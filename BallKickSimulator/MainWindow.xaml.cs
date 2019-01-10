@@ -2,9 +2,11 @@
 using SharpGL.SceneGraph;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +24,7 @@ namespace BallKickSimulator
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         #region Atributi
 
@@ -33,13 +35,45 @@ namespace BallKickSimulator
 
         #endregion Atributi
 
+        #region Bindings
+
+        private int _ballRotationSpeed;
+
+        public int BallRotationSpeed
+        {
+            get { return _ballRotationSpeed; }
+            set { _ballRotationSpeed = value; World.BallRotationSpeed = value; NotifyPropertyChanged(); }
+        }
+        
+        private int _ballJumpHeight;
+
+        public int BallJumpHeight
+        {
+            get { return _ballJumpHeight; }
+            set { _ballJumpHeight = value; World.BallJumpHeight = value; NotifyPropertyChanged(); }
+        }
+
+        private int _ballScale;
+
+        public int BallScale
+        {
+            get { return _ballScale; }
+            set { _ballScale = value; World.BallScale = value; NotifyPropertyChanged(); }
+        }
+
+        protected virtual void NotifyPropertyChanged([CallerMemberName] String propertyName = null)
+        {
+            //Console.WriteLine($"Changed {propertyName}!");
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
+
         #region Konstruktori
 
         public MainWindow()
         {
             // Inicijalizacija komponenti
             InitializeComponent();
-
             // Kreiranje OpenGL sveta
             try
             {
@@ -50,7 +84,12 @@ namespace BallKickSimulator
                 MessageBox.Show("Neuspesno kreirana instanca OpenGL sveta. Poruka greške: " + e.Message, "Poruka", MessageBoxButton.OK);
                 this.Close();
             }
+
+            BallScale = 400;
+            DataContext = this;
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion Konstruktori
 
@@ -88,32 +127,111 @@ namespace BallKickSimulator
         {
             switch (e.Key)
             {
-                case Key.F10: this.Close(); break;
-                case Key.W: m_world.RotationX -= 5.0f; break;
-                case Key.S: m_world.RotationX += 5.0f; break;
-                case Key.A: m_world.RotationY -= 5.0f; break;
-                case Key.D: m_world.RotationY += 5.0f; break;
-                case Key.Add: m_world.SceneDistance -= 700.0f; break;
-                case Key.Subtract: m_world.SceneDistance += 700.0f; break;
-                //case Key.F2:
-                    //OpenFileDialog opfModel = new OpenFileDialog();
-                    //bool result = (bool)opfModel.ShowDialog();
-                    //if (result)
-                    //{
+                case Key.F2: this.Close(); break;
+                case Key.D:
+                    if (!World.ballKickAnimation)
+                    {
+                        if (m_world.RotationX >= 5f && m_world.RotationX <= 175.0f)
+                        {
+                            m_world.RotationX -= 5.0f;
+                        }
+                        else if (m_world.RotationX < 5)
+                        {
+                            m_world.RotationX = 5;
+                        }
+                        else if (m_world.RotationX > 175.0f)
+                        {
+                            m_world.RotationX = 175.0f;
+                        }
+                    }
+                    break;
 
-                    //    try
-                    //    {
-                    //        World newWorld = new World(Directory.GetParent(opfModel.FileName).ToString(), Path.GetFileName(opfModel.FileName), (int)openGLControl.Width, (int)openGLControl.Height, openGLControl.OpenGL);
-                    //        m_world.Dispose();
-                    //        m_world = newWorld;
-                    //        m_world.Initialize(openGLControl.OpenGL);
-                    //    }
-                    //    catch (Exception exp)
-                    //    {
-                    //        MessageBox.Show("Neuspesno kreirana instanca OpenGL sveta:\n" + exp.Message, "GRESKA", MessageBoxButton.OK);
-                    //    }
-                    //}
-                    //break;
+                case Key.E:
+                    if (!World.ballKickAnimation)
+                    {
+                        if (m_world.RotationX >= 5f && m_world.RotationX <= 90.0f)
+                        {
+                            m_world.RotationX += 5.0f;
+                        }
+                        else if (m_world.RotationX < 5)
+                        {
+                            m_world.RotationX = 5;
+                        }
+                        else if (m_world.RotationX > 90.0f)
+                        {
+                            m_world.RotationX = 90.0f;
+                        }
+                    }
+                    break;
+                case Key.S:
+                    if (!World.ballKickAnimation)
+                    {
+                        m_world.RotationY += 5.0f;
+                    }
+                    break;
+                case Key.F:
+                    if (!World.ballKickAnimation)
+                    {
+                        m_world.RotationY -= 5.0f;
+                    }
+                    break;
+                case Key.Subtract:
+                    if (!World.ballKickAnimation)
+                    {
+                        m_world.SceneDistance += 700.0f;
+                    }
+                    break;
+                case Key.Add:
+                    if (!World.ballKickAnimation)
+                    {
+                        m_world.SceneDistance -= 700.0f;
+                    }
+                    break;
+                case Key.V:
+                    if (World.ballJumpAnimation)
+                        break;
+
+                    if (World.ballKickAnimation)
+                    {
+                        World.ballKickTimer.Stop();
+                        World.ballKickTimer = null;
+                        World.ballKickAnimation = false;
+                        World.ballY = World.ballDefaultY;
+                        World.ballZ = World.ballDefaultZ;
+                    }
+                    else
+                    {
+                        World.ballKickAnimation = true;
+                        World.ballKickTimer = new System.Windows.Threading.DispatcherTimer();
+                        World.ballKickTimer.Tick += new EventHandler(World.BallKickAnimation);
+                        World.ballKickTimer.Interval = TimeSpan.FromMilliseconds(50);
+                        World.ballKickTimer.Start();
+                    }
+                    break;
+            }
+        }
+
+        private void BallJumpButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (World.ballKickAnimation)
+                return;
+
+            if(World.ballJumpAnimation)
+            {
+                World.ballJumpTimer.Stop();
+                World.ballJumpTimer = null;
+                World.ballJumpAnimation = false;
+                World.ballY = World.ballDefaultY;
+                BallJumpButton.Content = "Jump Ball";
+            }
+            else
+            {
+                World.ballJumpAnimation = true;
+                World.ballJumpTimer = new System.Windows.Threading.DispatcherTimer();
+                World.ballJumpTimer.Tick += new EventHandler(World.BallJumpAnimation);
+                World.ballJumpTimer.Interval = TimeSpan.FromMilliseconds(100);
+                World.ballJumpTimer.Start();
+                BallJumpButton.Content = "Stop Jump";
             }
         }
     }

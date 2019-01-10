@@ -8,10 +8,30 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <!-- The OpenGL control provides a OpenGL drawing surface. -->
-        <sharpGL:OpenGLControl 
+        <sharpGL:OpenGLControl Grid.Column="0"
             Name="openGLControl" OpenGLDraw="openGLControl_OpenGLDraw" 
             OpenGLInitialized="openGLControl_OpenGLInitialized" Resized="openGLControl_Resized"
             DrawFPS="True" RenderContextType="FBO" FrameRate="10"/>
+
+        <StackPanel Grid.Column="1" Background="LightGray">
+            <StackPanel>
+                <Label Content="Ball Jumping Height" />
+                <Slider Value="{Binding BallJumpHeight, Mode=TwoWay}" TickFrequency="50" TickPlacement="BottomRight" Minimum="0" SmallChange="100" Maximum="1500"/>
+            </StackPanel>
+            <StackPanel>
+                <Label Content="Scale Ball" />
+                <Slider Value="{Binding BallScale, Mode=TwoWay}" TickFrequency="100" TickPlacement="BottomRight" Minimum="100" SmallChange="100" Maximum="1000"/>
+            </StackPanel>
+            <StackPanel>
+                <Label Content="Ball Rotation Speed" />
+                <Slider Value="{Binding BallRotationSpeed, Mode=TwoWay}" TickFrequency="10" TickPlacement="BottomRight" Minimum="0" SmallChange="10" Maximum="100"/>
+            </StackPanel>
+            <Button Content="Jump ball" Name="BallJumpButton" Click="BallJumpButton_Click"/>
+        </StackPanel>
     </Grid>
 </Window>
